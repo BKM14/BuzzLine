@@ -10,7 +10,7 @@
         "isolatedModules": true,
         "strict": true,
         "noUncheckedIndexedAccess": true,
-        "module": "NodeNext"
+        "module": "ES2015"
 },
     "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
     "exclude": ["node_modules"]

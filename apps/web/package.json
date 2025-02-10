@@ -10,10 +10,13 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@repo/db": "^0.0.0",
     "@repo/ui": "*",
+    "@types/ws": "^8.5.13",
     "next": "^14.2.3",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^14.2.3",
