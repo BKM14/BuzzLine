@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output = "./node_modules/.prisma/client"
 }
 
 datasource db {
@@ -9,7 +10,7 @@ datasource db {
 
 model User {
   id             String   @id @default(cuid())
-  name     String
+  name           String
   email          String?  @unique
   emailVerified  DateTime?
   image          String?
@@ -20,6 +21,11 @@ model User {
   joinedRooms    RoomParticipants[]
   accounts       Account[]
   sessions       Session[]
+  
+  sentMessages   DirectMessage[] @relation("SentMessages")
+  receivedMessages DirectMessage[] @relation("ReceivedMessages")
+
+  userConversations ConversationParticipants[]
 }
 
 model Account {
@@ -35,8 +41,8 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([provider, providerAccountId])
 }
 
@@ -58,7 +64,7 @@ model VerificationToken {
 }
 
 model Room {
-  id           Int                 @id @default(autoincrement())
+  id           String                 @id @default(cuid())
   name         String
   createdBy    User?      @relation("RoomCreator", fields: [createdById], references: [id])
   createdById  String?
@@ -69,22 +75,52 @@ model Room {
 }
 
 model Message {
-  id           Int      @id @default(autoincrement())
+  id           String      @id @default(cuid())
   content      String
   user         User     @relation(fields: [userId], references: [id])
   userId       String
   room         Room     @relation(fields: [roomId], references: [id])
-  roomId       Int
+  roomId       String
   sentAt       DateTime @default(now())
 }
 
 model RoomParticipants {
-  id         Int      @id @default(autoincrement())
+  id         String      @id @default(cuid())
   user       User     @relation(fields: [userId], references: [id])
   userId     String
   room       Room     @relation(fields: [roomId], references: [id])
-  roomId     Int
+  roomId     String
   joinedAt   DateTime @default(now())
 
   @@unique([userId, roomId])
+}
+
+model Conversation {
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+  
+  participants   ConversationParticipants[]
+  messages       DirectMessage[]
+}
+
+model ConversationParticipants {
+  id             String        @id @default(cuid())
+  user           User          @relation(fields: [userId], references: [id])
+  userId         String
+  conversation   Conversation  @relation(fields: [conversationId], references: [id])
+  conversationId String
+
+  @@unique([userId, conversationId])
+}
+
+model DirectMessage {
+  id             String        @id @default(cuid())
+  conversation   Conversation  @relation(fields: [conversationId], references: [id])
+  conversationId String
+  sender         User          @relation("SentMessages", fields: [senderId], references: [id])
+  senderId       String
+  receiver       User          @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  receiverId     String
+  content        String
+  sentAt         DateTime      @default(now())
 }

@@ -1,12 +1,7 @@
-/* eslint-disable/
-/* eslint-disable no-console */
-/* eslint-disable unicorn/filename-case */
 import { useEffect, useState, useRef } from "react";
+import { sendMessageToRoom } from "../lib/actions";
 
-export const useWebSocket = (url: string): {
-    messages: string[],
-    sendMessage: (message: string) => void
-} => {
+export const useWebSocket = (url: string) => {
     const [messages, setMessages] = useState<string[]>([]);
     const wsRef = useRef<WebSocket | null>(null);
 
@@ -19,9 +14,12 @@ export const useWebSocket = (url: string): {
             console.log("WebSocket connected");
         }
 
-        ws.onmessage = (event) => {
-            const message = event.data as string;
-            setMessages((prevMessages: string[]) => [...prevMessages, message]);
+        ws.onmessage = async (event) => {
+            const data = JSON.parse(event.data) as {
+                "type": string,
+                "message": string
+            };
+            setMessages((prevMessages: string[]) => [...prevMessages, data.message]);
         }
 
         ws.onclose = () => {
@@ -36,21 +34,26 @@ export const useWebSocket = (url: string): {
         return () => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.close()
-              }
+            }
         };
     }, [url]);
 
-    const sendMessage = (message: string) => {
+    const sendMessage = async (data: {
+        type: string,
+        message?: string,
+        room?: string
+    }) => {
         try {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-                wsRef.current.send(message);
+                wsRef.current.send(JSON.stringify(data));
+                if (data.type === "message" && data.message) await sendMessageToRoom("cm7bfhv4000000cl1e0yue9ov", data.message);
             } else {
                 console.log("Socket is not open");
             }
-        } catch (e) {
-            console.error(`An error occured: ${e.message}`);
+        } catch (e: unknown) {
+            const error = e instanceof Error ? e.message : e
+            console.error(`An error occured: ${error}`);
         }
     }
-
     return {messages, sendMessage};
 }

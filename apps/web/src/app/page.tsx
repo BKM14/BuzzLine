@@ -11,7 +11,7 @@ export default function Page(): JSX.Element {
             <div className="flex flex-col items-center">
               <h1>Next.js WebSocket Client</h1>
               <div>
-              { messages.length !==0  ? ( messages.map((message, key) => (
+              { messages.length > 0  ? ( messages.map((message, key) => (
                   <div key={key}>{message}</div>
                 ))
               ) : (
@@ -22,7 +22,8 @@ export default function Page(): JSX.Element {
               </div>
             </div>
             <div className="bg-gray-200">
-              <CustomInput onClick={sendMessage} placeholder="Send a message" type="text"/>
+            <CustomInput onClick={sendMessage} placeholder="Join A Room" type="text" joinRoom={true}/>
+            <CustomInput onClick={sendMessage} placeholder="Send a message" type="text" joinRoom={false}/>
             </div>
     </div>
   );
