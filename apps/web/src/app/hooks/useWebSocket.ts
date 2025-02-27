@@ -46,7 +46,7 @@ export const useWebSocket = (url: string) => {
         try {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(data));
-                if (data.type === "message" && data.message) await sendMessageToRoom("cm7bfhv4000000cl1e0yue9ov", data.message);
+                if (data.type === "message" && data.message && data.room) await sendMessageToRoom(data.room, data.message);
             } else {
                 console.log("Socket is not open");
             }

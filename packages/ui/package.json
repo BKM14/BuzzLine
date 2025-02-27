@@ -9,8 +9,7 @@
   ],
   "exports": {
     "./styles.css": "./dist/index.css",
-    "./card": "./src/card.tsx",
-    "./CustomInput": "./src/CustomInput.tsx"
+    "./card": "./src/card.tsx"
   },
   "license": "MIT",
   "scripts": {

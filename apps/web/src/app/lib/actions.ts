@@ -7,7 +7,10 @@ export async function sendMessageToRoom(roomId: string, content: string) {
 
   const session = await getSession();
 
-  if (!session?.user) throw new Error("Unauthorized"); 
+  if (!session?.user) return {
+    message: "You are not signed in!",
+    status: 401
+  }
   const userId = session.user.id;
     
   const message = await prisma.message.create({
@@ -28,7 +31,10 @@ export async function sendDirectMessage(receiverId: string, content: string) {
 
   const session = await getSession();
 
-  if (!session?.user) throw new Error("Unauthorized"); 
+  if (!session?.user) return {
+    message: "You are not signed in!",
+    status: 401
+  }
   const userId = session.user.id;
   
   let conversation = await prisma.conversation.findFirst({
@@ -68,4 +74,51 @@ export async function sendDirectMessage(receiverId: string, content: string) {
     });
 
     return directMessage;
+}
+
+export async function createRoom(roomName: string) {
+  const session = await getSession();
+
+  if (!session?.user) return {
+    message: "You are not signed in!",
+    status: 401
   }
+
+  const userId = session.user.id;
+
+  const existingRoom = await prisma.room.findFirst({
+    where: {
+      name: roomName,
+      participants: {
+        some: {
+          userId: userId
+        }
+      }
+    }
+  })
+
+  if (existingRoom) {
+    return {
+      message: "You are already in this room. You cannot create it again.",
+      status: 409
+    }
+  }
+
+  const room = prisma.room.create({
+    data: {
+      name: roomName,
+      createdById: userId,
+      participants: {
+        create: {
+          userId: userId
+        }
+      }
+    }
+  });
+
+  return {
+    room,
+    message: "Room created succesfully",
+    status: 200
+  };
+}

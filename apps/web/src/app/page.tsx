@@ -1,5 +1,6 @@
 "use client";
-import CustomInput from "@repo/ui/CustomInput";
+import CreateRoom from "./components/create-room";
+import CustomInput from "./components/custom-input";
 import { useWebSocket } from "./hooks/useWebSocket";
 
 export default function Page(): JSX.Element {
@@ -20,7 +21,11 @@ export default function Page(): JSX.Element {
               </div>
               )}
               </div>
+              
             </div>
+            <div className="w-1/2 mx-auto">
+                <CreateRoom />
+              </div>
             <div className="bg-gray-200">
             <CustomInput onClick={sendMessage} placeholder="Join A Room" type="text" joinRoom={true}/>
             <CustomInput onClick={sendMessage} placeholder="Send a message" type="text" joinRoom={false}/>
