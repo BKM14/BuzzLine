@@ -2,10 +2,13 @@ import "./globals.css";
 import "@repo/ui/styles.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Providers from "./providers";
 import { getSession } from "next-auth/react";
+import Providers from "./providers";
+import '@mantine/core/styles.css';
 
 const inter = Inter({ subsets: ["latin"] });
+
+import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from '@mantine/core';
 
 export const metadata: Metadata = {
   title: "Create Turborepo",
@@ -21,10 +24,13 @@ export default async function RootLayout({
   const session = await getSession();
 
   return (
-    <html lang="en">
+    <html lang="en" {...mantineHtmlProps}>
+      <head>
+      <ColorSchemeScript />
+      </head>
       <body className={inter.className}>
         <Providers session={session}>
-          {children}
+          <MantineProvider>{children}</MantineProvider>
         </Providers>
       </body>
     </html>
