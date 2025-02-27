@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Button, TextInput } from "@mantine/core";
 
 export default function CustomInput({onClick, placeholder, type, joinRoom}: {
   onClick: (data: {
@@ -13,9 +14,9 @@ export default function CustomInput({onClick, placeholder, type, joinRoom}: {
 
   const [input, setInput] = useState("");
 
-  return <div className="flex ui-justify-center">
-        <input className="border-2 ui-border-zinc-500 ui-my-4 p-2 ui-w-2/5 h-1/2" onChange={(e) => {setInput(e.target.value)}} placeholder={placeholder} type={type} value={input}/>
-        <button className="h-1/2 ui-my-auto p-2 rounded-md bg-green-400 border-2 mx-2 ui-w-24 hover:ui-bg-green-500 ui-duration-200" onClick={() => { 
+  return <div className="flex ui-justify-center px-4 py-2">
+        <TextInput className="border ui-border-slate-400 ui-rounded-full" onChange={(e) => {setInput(e.target.value)}} placeholder={placeholder} radius="xl" type={type} value={input} variant="filled" w="25%"/>
+        <Button color="green" mx={4} onClick={() => { 
           joinRoom ? onClick({
             "type": "join", 
             "room": input
@@ -24,6 +25,6 @@ export default function CustomInput({onClick, placeholder, type, joinRoom}: {
             "message": input
           })
           setInput("");
-        }} type="button">Send</button>
+        }} radius="xl"  type="button" w="6%">Send</Button>
     </div>
 }
