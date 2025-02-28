@@ -14,9 +14,9 @@ export default function CustomInput({onClick, placeholder, type, joinRoom}: {
 
   const [input, setInput] = useState("");
 
-  return <div className="flex ui-justify-center px-4 py-2">
-        <TextInput className="border ui-border-slate-400 ui-rounded-full" onChange={(e) => {setInput(e.target.value)}} placeholder={placeholder} radius="xl" type={type} value={input} variant="filled" w="25%"/>
-        <Button color="green" mx={4} onClick={() => { 
+  return <div className="flex justify-center px-4 py-2">
+        <TextInput className="border border-slate-400 rounded-full w-1/2 lg:w-1/4" onChange={(e) => {setInput(e.target.value)}} placeholder={placeholder} radius="xl" type={type} value={input} variant="filled"/>
+        <Button className="min-w-fit" color="green" mx={4} onClick={() => { 
           joinRoom ? onClick({
             "type": "join", 
             "room": input
@@ -25,6 +25,6 @@ export default function CustomInput({onClick, placeholder, type, joinRoom}: {
             "message": input
           })
           setInput("");
-        }} radius="xl"  type="button" w="6%">Send</Button>
+        }} radius="xl"  type="button">Send</Button>
     </div>
 }
