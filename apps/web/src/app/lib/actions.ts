@@ -96,6 +96,12 @@ export async function sendDirectMessage(receiverId: string, content: string) {
 }
 
 export async function createRoom(roomName: string) {
+  
+  if (roomName.trim().length === 0) return {
+    error: "Room name cannot be empty",
+    status: 400
+  }
+
   const session = await getSession();
 
   if (!session?.user) return {
