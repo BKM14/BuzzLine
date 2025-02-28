@@ -8,12 +8,13 @@ export async function sendMessageToRoom(roomId: string, content: string) {
   const session = await getSession();
 
   if (!session?.user) return {
-    message: "You are not signed in!",
+    error: "You are not signed in!",
     status: 401
   }
   const userId = session.user.id;
-    
-  const message = await prisma.message.create({
+
+  try {
+    const message = await prisma.message.create({
       data: {
         userId,
         roomId,
@@ -24,7 +25,18 @@ export async function sendMessageToRoom(roomId: string, content: string) {
       },
     });
 
-    return message;
+    return {
+      status: 200
+    }
+  } catch (e) {
+    console.log("An unexpected error occurred while sending the message: ", e);
+    return {
+      error: e,
+      status: 400
+    }
+  }
+    
+  
 }
 
 export async function sendDirectMessage(receiverId: string, content: string) {
@@ -32,55 +44,62 @@ export async function sendDirectMessage(receiverId: string, content: string) {
   const session = await getSession();
 
   if (!session?.user) return {
-    message: "You are not signed in!",
+    error: "You are not signed in!",
     status: 401
   }
   const userId = session.user.id;
-  
-  let conversation = await prisma.conversation.findFirst({
-    where: {
-      participants: {
-        every: {
-          userId: { in: [userId, receiverId] },
-        },
-      },
-    },
-  });
-  
-  
-    if (!conversation) {
-      conversation = await prisma.conversation.create({
-        data: {
-          participants: {
-            create: [
-              { user: { connect: { id: userId } } },
-              { user: { connect: { id: receiverId } } },
-            ],
+
+  try {
+    let conversation = await prisma.conversation.findFirst({
+      where: {
+        participants: {
+          every: {
+            userId: { in: [userId, receiverId] },
           },
         },
-      });
-    }
-  
-    const directMessage =  await prisma.directMessage.create({
-      data: {
-        senderId: userId,
-        receiverId,
-        conversationId: conversation.id,
-        content,
-      },
-      include: {
-        sender: true,
       },
     });
 
-    return directMessage;
+      if (!conversation) {
+        conversation = await prisma.conversation.create({
+          data: {
+            participants: {
+              create: [
+                { user: { connect: { id: userId } } },
+                { user: { connect: { id: receiverId } } },
+              ],
+            },
+          },
+        });
+      }
+    
+      const directMessage =  await prisma.directMessage.create({
+        data: {
+          senderId: userId,
+          receiverId,
+          conversationId: conversation.id,
+          content,
+        },
+        include: {
+          sender: true,
+        },
+      });
+  
+      return directMessage;
+  } catch(e) {
+    console.log("An unknown error occurred! - ", e)
+    return {
+      error: e,
+      status: 400
+    }
+  }
 }
 
 export async function createRoom(roomName: string) {
   const session = await getSession();
 
   if (!session?.user) return {
-    message: "You are not signed in!",
+    error: "You are not signed in!",
     status: 401
   }
 
@@ -104,7 +123,7 @@ export async function createRoom(roomName: string) {
     }
   }
 
-  const room = prisma.room.create({
+  await prisma.room.create({
     data: {
       name: roomName,
       createdById: userId,
@@ -117,8 +136,33 @@ export async function createRoom(roomName: string) {
   });
 
   return {
-    room,
     message: "Room created succesfully",
     status: 200
   };
+}
+
+export async function getUserRooms() {
+  const session = await getSession();
+
+  if (!session?.user) return {
+    message: "You are not signed in!",
+    status: 401
+  }
+
+  const userId = session.user.id;
+
+  const rooms = await prisma.room.findMany({
+    where: {
+      participants: {
+        some: {
+          userId: userId
+        }
+      }
+    }
+  })
+
+  return {
+    rooms,
+    status: 200
+  }
 }
