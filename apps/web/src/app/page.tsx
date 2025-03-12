@@ -1,12 +1,11 @@
 "use client";
 import CreateRoom from "./components/create-room";
-import CustomInput from "./components/custom-input";
 import UserRooms from "./components/user-rooms";
 import { useWebSocket } from "./hooks/useWebSocket";
 
 export default function Page(): JSX.Element {
 
-  const { messages, sendMessage } = useWebSocket("ws://localhost:8080");
+  const { messages, joinRoom, sendMessage } = useWebSocket("ws://localhost:8080");
 
   return (
     <div className="flex flex-col justify-between min-h-screen">
@@ -27,12 +26,8 @@ export default function Page(): JSX.Element {
                 <CreateRoom />
               </div>
               <div className="w-1/2 mx-auto">
-                <UserRooms />
+                <UserRooms joinRoom={joinRoom} sendMessage={sendMessage}/>
               </div>
-            <div className="bg-gray-200">
-            <CustomInput onClick={sendMessage} placeholder="Join A Room" type="text" joinRoom={true}/>
-            <CustomInput onClick={sendMessage} placeholder="Send a message" type="text" joinRoom={false}/>
-            </div>
     </div>
   );
 }

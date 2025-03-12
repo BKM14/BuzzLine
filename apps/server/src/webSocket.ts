@@ -1,4 +1,9 @@
 import { WebSocketServer, WebSocket } from "ws";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv"
+import { prisma } from "@repo/db";
+
+dotenv.config()
 
 class WebSocketService {
     private static instance: WebSocketService;
@@ -8,7 +13,23 @@ class WebSocketService {
     private constructor(port: number) {
         this.wss = new WebSocketServer({ port });
 
-        this.wss.on("connection", (ws) => {
+        this.wss.on("connection", (ws, req) => {
+
+            const url = new URL(req.url || "/", `http://${req.headers.host}`)
+            const token = url.searchParams.get("token");
+
+            if (!token) {
+                ws.close(1008, "Authentication required");
+                return;
+            }
+
+            try {
+                const payload = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as jwt.JwtPayload;
+                (ws as any).userId = payload.id;
+            } catch(error) {
+                console.error("Error verifying token: ", error);
+                ws.close(1008, "Invalid token");
+            }
 
             ws.on("error", console.error);
 
@@ -16,23 +37,37 @@ class WebSocketService {
 
             let currentRoom: string | null = null;
 
-            ws.on("message", (message) => {
+            ws.on("message", async (message) => {
                 const data = JSON.parse(message.toString());
+                const userId = (ws as any).userId;
+
+                if (!userId) {
+                    ws.send(JSON.stringify({ error: "Unauthorized" }));
+                    return;
+                }
 
                 if (data.type === "join") {
-                    const roomName = data.room;
+                    const roomId = data.roomId;
                     
-                    if (!this.rooms[roomName]) {
-                        this.rooms[roomName] = new Set();
+                    if (!this.rooms[roomId]) {
+                        this.rooms[roomId] = new Set();
                     }
                     
-                    this.rooms[roomName].add(ws);
-                    currentRoom = roomName;
-                    console.log(`Client joined room: ${roomName}`);
+                    this.rooms[roomId].add(ws);
+                    currentRoom = roomId;
+                    console.log(`Client joined room: ${roomId}`);
 
                 } else if (data.type === "message") {
-                    if (currentRoom) this.broadcast(currentRoom, ws, data.message);
-                    else ws.send("Please join a room before sending a message!");
+                    if (currentRoom) {
+                        this.broadcast(currentRoom, ws, data.message);
+                        await prisma.message.create({
+                            data: {
+                                userId: userId,
+                                roomId: data.roomId,
+                                content: data.message
+                            }
+                        })
+                    } else ws.send(JSON.stringify({ error: "Please join a room before sending a message!" }));
                 }
             });
 

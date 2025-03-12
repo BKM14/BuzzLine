@@ -3,6 +3,7 @@ import { prisma } from "@repo/db";
 import type { AuthOptions, Session} from "next-auth";
 import { getServerSession } from "next-auth"
 import GoogleProvider from "next-auth/providers/google";
+import jwt from "jsonwebtoken"
 
 const authOptions: AuthOptions = {
   providers: [
@@ -13,19 +14,29 @@ const authOptions: AuthOptions = {
   ],
   adapter: PrismaAdapter(prisma),
   session: {
-    strategy: "database"
+    strategy: "jwt"
   },
   callbacks: {
-    async session({ session, user }) {
-     if (session.user) {
-      session.user = {
-        ...session.user,
-        id: user.id
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
       }
+
+      token.signedToken = jwt.sign(
+        { id: token.id, email: token.email }, process.env.NEXTAUTH_SECRET!
+      )
+      
+      return token;
+    },
+    async session({ session, token }) {
+     if (session.user) {
+      session.user.id = token.id; 
+      session.jwt = token.signedToken;
      }
       return session;
     }
-  }
+  },
+  secret: process.env.NEXTAUTH_SECRET
 }
 
 const getSession = (): Promise<Session | null> => {
